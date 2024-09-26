@@ -13,7 +13,7 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
+
   CardFooter,
   CardHeader,
   CardTitle,
@@ -25,6 +25,9 @@ import { UserRegister } from "../types/user";
 const formSchema = z.object({
   username: z.string().min(2, {
     message: "Username must be at least 2 characters.",
+  }).regex(/^[a-zA-Z\s]+$/, {
+    message:
+      "Username must only contain letters and spaces, no numbers or symbols are allowed.",
   }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(2, {

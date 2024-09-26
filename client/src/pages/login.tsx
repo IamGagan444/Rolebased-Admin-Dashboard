@@ -19,35 +19,67 @@ import {
 
 import { Input } from "../components/ui/input";
 import { UserLogin } from "../types/user";
+import axios from "axios";
+import { baseApi } from "../lib/baseapi";
+import { useState } from "react";
+import Loading from "../components/Loading";
+import CustomUser from "../context/userContext";
+import Cookie from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .regex(/^[a-zA-Z\s]+$/, {
-      message:
-        "Username must only contain letters and spaces, no numbers or symbols are allowed.",
-    }),
+  email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(2, {
     message: "Password must be at least 2 characters.",
   }),
 });
 
 export function Login() {
+  const [loading, setLoading] = useState(false);
+  const { setUserData } = CustomUser();
+  const naviagte=useNavigate()
   const form = useForm({
     resolver: zodResolver(formSchema), // Don't forget to uncomment the zodResolver import
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  // Define onSubmit handler
-  const onSubmit = (data: UserLogin) => {
-    console.log(data); // Replace with actual form submission logic
+  const onSubmit = async (data: UserLogin) => {
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    await axios
+      .post(`${baseApi}/user-login`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((response) => {
+        console.log("File uploaded:", response?.data?.data);
+        setUserData(response?.data?.data?.users);
+        Cookie.set("accessToken", response?.data?.data?.accessToken, {
+          expires: 7,
+          path: "/",
+        });
+        naviagte("/")
+        setLoading(false);
+
+      })
+      .catch((error) => {
+        console.error("File upload error!", error);
+        setLoading(false);
+      });
   };
+
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <section className="h-screen flex justify-center items-center ">
       <Form {...form}>
@@ -61,19 +93,15 @@ export function Login() {
                 <div className="flex flex-col space-y-1.5">
                   <FormField
                     control={form.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="username"
-                            {...field}
-                            type="string"
-                          />
+                          <Input placeholder="Email" {...field} type="string" />
                         </FormControl>
 
-                        <FormMessage />
+                        <FormMessage content="" />
                       </FormItem>
                     )}
                   />
