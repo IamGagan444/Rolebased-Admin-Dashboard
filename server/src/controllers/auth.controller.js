@@ -85,15 +85,17 @@ const userLogin = AsyncHandler(async (req, res, next) => {
   const { accessToken, refreshToken } = await generateTokens(user._id);
   console.log(accessToken, refreshToken);
   const options = {
-    httpOnly: true,
-    secure: true,
+    httpOnly: true,        
+    Secure: true,         //Secure, S should be capital
+    // sameSite: "None",      
+    path: "/",          //you can access anywhere
+    maxAge: 1000 * 60 * 60 * 24 * 1,        
   };
 
 
   return res
   .status(200)
   .cookie("accessToken", accessToken, options)
-  .cookie("refreshToken", refreshToken, options)
   .json(
     new Apiresponse(200, {
       users: user,

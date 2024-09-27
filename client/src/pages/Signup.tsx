@@ -13,22 +13,29 @@ import {
 import {
   Card,
   CardContent,
-
   CardFooter,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
 
 import { Input } from "../components/ui/input";
-import { UserRegister } from "../types/user";
+import { Errors, UserRegister } from "../types/user";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { baseApi } from "../lib/baseapi";
+import { useState } from "react";
+import Loading from "../components/Loading";
 
 const formSchema = z.object({
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }).regex(/^[a-zA-Z\s]+$/, {
-    message:
-      "Username must only contain letters and spaces, no numbers or symbols are allowed.",
-  }),
+  username: z
+    .string()
+    .min(2, {
+      message: "Username must be at least 2 characters.",
+    })
+    .regex(/^[a-zA-Z\s]+$/, {
+      message:
+        "Username must only contain letters and spaces, no numbers or symbols are allowed.",
+    }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(2, {
     message: "Password must be at least 2 characters.",
@@ -36,6 +43,10 @@ const formSchema = z.object({
 });
 
 export function Signup() {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [error, setError] = useState<Errors>();
+
   const form = useForm({
     resolver: zodResolver(formSchema), // Don't forget to uncomment the zodResolver import
     defaultValues: {
@@ -46,16 +57,42 @@ export function Signup() {
   });
 
   // Define onSubmit handler
-  const onSubmit = (data: UserRegister) => {
-    console.log(data); // Replace with actual form submission logic
+  const onSubmit = async (data: UserRegister) => {
+    console.log(data);
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("username", data.username);
+    formData.append("password", data.password);
+
+    await axios
+      .post(`${baseApi}/user-registration`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((reponse) => {
+        console.log("gagan", reponse.data.message);
+        form.reset();
+
+        navigate("/dashboard");
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log("dflkjsdf", error?.response?.data?.message);
+        setError(error.response.data);
+        setLoading(false);
+      });
   };
+
+  if (loading) return <Loading />;
+
   return (
-    <section className="h-screen flex items-center justify-center">
+    <section className=" flex items-center justify-center">
       <Form {...form}>
-        <Card className="w-[350px]">
+        <Card className="w-[350px] my-28">
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl">Registration</CardTitle>
-           
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -110,12 +147,36 @@ export function Signup() {
                     )}
                   />
                 </div>
+                {error?.success ? (
+                  ""
+                ) : (
+                  <p className="w-full text-red-500 text-[12px]">
+                    {error?.message}
+                  </p>
+                )}
+              </div>
+              <br />
+              <div className="w-full flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => navigate("/")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Signup</Button>
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">Cancel</Button>
-            <Button>Signup</Button>
+          <CardFooter className="flex justify-between"></CardFooter>
+          {/* <br /> */}
+          <CardFooter>
+            <p className="text-center w-full">
+              Already have an account?{" "}
+              <Link to={"/login"} className=" text-sky-500">
+                Login
+              </Link>
+            </p>
           </CardFooter>
         </Card>
       </Form>

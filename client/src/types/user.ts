@@ -3,7 +3,8 @@ export interface User {
   password: string;
   email: string;
   role: string | null;
-  createdBy:string|null
+  createdBy: string | null;
+  _id: string | null;
 }
 
 export interface UserLogin {
@@ -15,4 +16,9 @@ export interface UserRegister {
   username: string;
   password: string;
   email: string;
+}
+export interface Errors {
+  success: boolean;
+  status: number;
+  message: string;
 }

@@ -7,13 +7,14 @@ import jwt from "jsonwebtoken";
 export const authMiddleware = (allowedRoles = []) => {
   if (typeof allowedRoles === "string") allowedRoles = [allowedRoles];
   return AsyncHandler(async (req, res, next) => {
-
-
-
     // Get token from cookies or authorization header
+    // const token =
+
+    //   req.cookies?.accessToken ||
+    //   req?.header("authorization")?.replace("Bearer", "").trim();
     const token =
-      req.cookies?.accessToken ||
-      req?.header("authorization")?.replace("Bearer", "").trim();
+    req.headers.authorization?.split(" ")[1] || req.cookies.accessToken;
+    console.log(req);
 
     // Check if token is missing
     if (!token) {
@@ -40,7 +41,7 @@ export const authMiddleware = (allowedRoles = []) => {
     if (!user) {
       return next(new ApiError(403, "User not found, please log in"));
     }
-console.log(allowedRoles,user.role)
+    console.log(allowedRoles, user.role);
     // Check if user role is allowed
     if (!allowedRoles.includes(user.role)) {
       return next(new ApiError(403, "Access denied, insufficient permissions"));

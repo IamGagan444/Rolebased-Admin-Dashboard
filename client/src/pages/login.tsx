@@ -13,19 +13,20 @@ import {
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
 
 import { Input } from "../components/ui/input";
-import { UserLogin } from "../types/user";
+import { Errors, UserLogin } from "../types/user";
 import axios from "axios";
 import { baseApi } from "../lib/baseapi";
 import { useState } from "react";
 import Loading from "../components/Loading";
 import CustomUser from "../context/userContext";
 import Cookie from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -36,8 +37,10 @@ const formSchema = z.object({
 
 export function Login() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Errors>();
+
   const { setUserData } = CustomUser();
-  const naviagte=useNavigate()
+  const naviagte = useNavigate();
   const form = useForm({
     resolver: zodResolver(formSchema), // Don't forget to uncomment the zodResolver import
     defaultValues: {
@@ -56,22 +59,26 @@ export function Login() {
     await axios
       .post(`${baseApi}/user-login`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
+        withCredentials: true,
       })
       .then((response) => {
-        console.log("File uploaded:", response?.data?.data);
+        console.log("File uploaded:", response?.data?.data.accessToken);
         setUserData(response?.data?.data?.users);
-        Cookie.set("accessToken", response?.data?.data?.accessToken, {
+        Cookie.set("token", response?.data?.data?.accessToken, {
           expires: 7,
           path: "/",
+          sameSite: "Lax",
+          secure: true,
         });
-        naviagte("/")
+        naviagte("/dashboard");
         setLoading(false);
-
       })
       .catch((error) => {
         console.error("File upload error!", error);
+        setError(error?.response?.data);
         setLoading(false);
       });
   };
@@ -123,6 +130,13 @@ export function Login() {
                     )}
                   />
                 </div>
+                {error?.success ? (
+                  ""
+                ) : (
+                  <p className="w-full text-red-500 text-[12px]">
+                    {error?.message}
+                  </p>
+                )}
               </div>
               <br />
               <div className="w-full flex justify-between ">
@@ -131,6 +145,14 @@ export function Login() {
               </div>
             </form>
           </CardContent>
+          <CardFooter>
+            <p className="text-center w-full">
+              Don't have an account?{" "}
+              <Link to={"/signup"} className=" text-sky-500">
+                Signup
+              </Link>
+            </p>
+          </CardFooter>
         </Card>
       </Form>
     </section>
