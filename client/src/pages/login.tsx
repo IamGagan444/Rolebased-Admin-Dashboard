@@ -39,7 +39,7 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Errors>();
 
-  const { setUserData } = CustomUser();
+  const { setUserData, setAuthnticated } = CustomUser();
   const naviagte = useNavigate();
   const form = useForm({
     resolver: zodResolver(formSchema), // Don't forget to uncomment the zodResolver import
@@ -73,6 +73,8 @@ export function Login() {
           sameSite: "Lax",
           secure: true,
         });
+        Cookie.set("isAuthenticated", "true", { expires: 7 });
+        setAuthnticated(true);
         naviagte("/dashboard");
         setLoading(false);
       })

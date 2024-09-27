@@ -17,6 +17,10 @@ export interface UserRegister {
   password: string;
   email: string;
 }
+export interface UserRegistration extends UserRegister{
+  role: string;
+}
+
 export interface Errors {
   success: boolean;
   status: number;
